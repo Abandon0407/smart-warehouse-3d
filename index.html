@@ -2288,9 +2288,19 @@ window.Stage = {
     LIVE.why = o.why || LIVE.why;
     _liveReady = true;
   },
-  /* 首次拿到数据时跳过组装动画，直接进入正式视角 */
+  /* 首次拿到数据时跳过组装动画，直接进入正式视角。
+     注意：跳过动画必须把所有零件的最终状态一次性摆好，
+     否则还没"飞到"的零件会一直保持 visible=false（线上首屏曾因此只剩底板）。 */
   snap() {
     S.intro = 4; S.playing = false;
+    introParts.forEach(function (o) {
+      var a = o.userData && o.userData.anim;
+      if (!a) return;
+      o.visible = true;
+      o.position.y = a.y0;
+      o.scale.setScalar(1);
+    });
+    if (control) control.tDist = BASE_DIST;
     if (_liveReady) { S.curT = LIVE.t; S.curH = LIVE.h; S.k1 = LIVE.k1; S.k2 = LIVE.k2; S.lv = LIVE.lv; S.fan = LIVE.k1; S.heat = LIVE.k2; }
     if (hintSprite) { hintSprite.material.opacity = 0; hintSprite.visible = false; }
   },
